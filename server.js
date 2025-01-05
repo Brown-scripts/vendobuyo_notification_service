@@ -23,6 +23,10 @@ mongoose.connect(process.env.MONGODB_URI)
 // Setup Bull queue
 setupBullQueue();
 
+app.get('/test', (req, res) => {
+  res.status(200).json({ message: 'Hello from Vendobuyo API!' });
+});
+
 app.post('/', async (req, res) => {
   const { type, recipient, data } = req.body;
   try {
