@@ -1,46 +1,27 @@
+// notification-service/app.js
+require('dotenv').config();
+
+const { authenticate } = require('./middleware/auth');
+
 const express = require('express');
-const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const { setupBullQueue } = require('./config/bull');
-const { notificationQueue } = require('./config/bull');
-const { errorHandler } = require('./middleware/errorHandler');
-const cors = require('cors');
-
-
-dotenv.config();
+const bodyParser = require('body-parser');
+const notificationRoutes = require('./routes/notificationRoutes');
+const { receiveFromQueue } = require('./controllers/notificationController');
 
 const app = express();
-app.use(cors());
-const PORT = process.env.PORT || 3004;
+const port = process.env.PORT || 5003;
 
-app.use(express.json());
+app.use(bodyParser.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+// Use notification routes
+app.use('', notificationRoutes);
 
-// Setup Bull queue
-setupBullQueue();
+// Start listening to the RabbitMQ queue
+receiveFromQueue('order_status_queue');
+receiveFromQueue('delivery_status_queue');
+receiveFromQueue('payment_status_queue');
 
-app.get('/test', (req, res) => {
-  res.status(200).json({ message: 'Hello from Vendobuyo API!' });
+// Start the Express server
+app.listen(port, () => {
+  console.log(`Notification Service running on port ${port}`);
 });
-
-app.post('/', async (req, res) => {
-  const { type, recipient, data } = req.body;
-  try {
-    await notificationQueue.add('sendNotification', { type, recipient, data });
-    res.status(200).json({ message: 'Notification job added to queue' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error adding notification job', error: error.message });
-  }
-});
-
-// Error handling middleware
-app.use(errorHandler);
-
-app.listen(PORT, () => {
-  console.log(`Notification service running on port ${PORT}`);
-});
-
