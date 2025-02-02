@@ -46,12 +46,12 @@ const receiveFromQueue = (queue) => {
 };
 
 // Function to send the notification based on delivery status
-const sendNotification = (deliveryStatusUpdate) => {
-    console.log(`Sending notification for delivery ${deliveryStatusUpdate.trackingNumber}:`);
-    console.log(`Status: ${deliveryStatusUpdate.deliveryStatus}`);
+const sendNotification = (update) => {
+    const stringifiedUpdate = JSON.stringify(update)
+    console.log(`Sending notification ${stringifiedUpdate}:`);
 
     // Trigger email, SMS, and push notifications as needed
-    //   sendEmail(deliveryStatusUpdate);
+    sendEmail(update);
     //   sendSMS(deliveryStatusUpdate);
     //   sendPushNotification(deliveryStatusUpdate);
 };

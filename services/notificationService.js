@@ -13,7 +13,8 @@ admin.initializeApp({
 // Function to send email notifications
 const sendEmail = (update) => {
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Change to your email provider
+    host: 'smtp.gmail.com',
+    port: 465,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -23,8 +24,8 @@ const sendEmail = (update) => {
   const mailOptions = {
     from: process.env.SMTP_USER,
     to: update.targetEmail, // Replace with recipient's email
-    subject: `Update: ${update.trackingNumber}`,
-    text: `${update.deliveryStatus}`,
+    subject: `Update`,
+    text: `${JSON.stringify(update)}`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
