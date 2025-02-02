@@ -1,4 +1,3 @@
-// notification-service/app.js
 require('dotenv').config();
 
 const { authenticate } = require('./middleware/auth');
@@ -9,7 +8,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const { receiveFromQueue } = require('./controllers/notificationController');
 
 const app = express();
-const port = process.env.PORT || 5003;
+const port = process.env.PORT || 3004;
 
 app.use(bodyParser.json());
 

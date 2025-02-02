@@ -1,4 +1,3 @@
-// notification-service/controllers/notificationController.js
 const { sendEmail, sendSMS, sendPushNotification } = require('../services/notificationService');
 const amqp = require('amqplib/callback_api');
 
@@ -33,7 +32,7 @@ const receiveFromQueue = (queue) => {
                         console.log(`Received ${queue} update:`, update);
 
                         // // Handle the delivery update (send notification via email, SMS, or push)
-                        // sendNotification(update);
+                        sendNotification(update);
 
                         // Acknowledge the message so it is removed from the queue
                         channel.ack(msg);
