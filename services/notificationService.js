@@ -6,8 +6,6 @@ const admin = require('firebase-admin');
 // Initialize Firebase Admin for push notifications
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
-  // Alternatively, specify a path to the service account key JSON file:
-  // credential: admin.credential.cert(require('path-to-service-account-key.json')),
 });
 
 // Function to send email notifications
@@ -24,10 +22,11 @@ const sendEmail = (update) => {
 
   const mailOptions = {
     from: process.env.SMTP_USER,
-    to: update.targetEmail, // Replace with recipient's email
-    subject: `Update`,
-    text: `${JSON.stringify(update)}`,
-  };
+    to: update.targetEmail.trim(),
+    subject: `Order Update: #${update.orderId}`,
+    text: `Order ID: ${update.orderId}\nStatus: ${update.status}\nTotal: $${update.totalPrice}\nSee more details in HTML version.`,
+    html: update.formattedMessage, 
+};
 
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
