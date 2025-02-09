@@ -44,7 +44,6 @@ const receiveFromQueue = (queue) => {
     });
 };
 
-// Function to send the notification dynamically
 const sendNotification = (update, queue) => {
     console.log(`📢 Sending Notification for ${queue} update`);
 
@@ -53,47 +52,52 @@ const sendNotification = (update, queue) => {
     let icon = "";
 
     // Ensure essential fields are present in the update object
-    if (!update.orderId) {
-        console.error("Error: Missing orderId.");
+    if (!update.orderId || !update.sellerEmail || !update.buyerEmail) {
+        console.error("❌ Error: Missing required fields.");
+        console.error("Expected fields: orderId, sellerEmail, buyerEmail");
+        console.error("Received update:", update);
         return;
     }
 
+    // Assign targetEmail as sellerEmail (since targetEmail is missing)
+    update.targetEmail = update.sellerEmail;
+
     // Determine the content based on the queue type
-    if (queue === 'order_status_queue') {
-        // Ensure update.status exists
-        if (!update.status) {
-            console.error("Error: Missing order status.");
-            return;
-        }
-
-        emailSubject = `🛒 Order Update: #${update.orderId}`;
-        emailBody = `Your order status has been updated to: <strong>${update.status.toUpperCase()}</strong>.`;
-        icon = "🛒";
-
-    } else if (queue === 'delivery_status_queue') {
-        // Ensure update.status and update.estimatedDelivery exist
-        if (!update.status || !update.estimatedDelivery) {
-            console.error("Error: Missing delivery status or estimated delivery date.");
-            return;
-        }
-
-        emailSubject = `🚚 Delivery Update: #${update.orderId}`;
-        emailBody = `Your order is now <strong>${update.status.toUpperCase()}</strong>. Expected delivery: <strong>${update.estimatedDelivery}</strong>.`;
-        icon = "🚚";
-
-    } else if (queue === 'payment_status_queue') {
-        // Ensure update.amount and update.paymentStatus exist
+    if (queue === 'payment_status_queue') {
         if (!update.amount || !update.paymentStatus) {
-            console.error("Error: Missing payment amount or status.");
+            console.error("❌ Error: Missing payment amount or status.");
             return;
         }
 
         emailSubject = `💰 Payment Update: #${update.orderId}`;
-        emailBody = `Your payment of <strong>$${update.amount}</strong> has been marked as: <strong>${update.paymentStatus.toUpperCase()}</strong>.`;
+        emailBody = `Your payment of <strong>$${update.amount}</strong> has been marked as: <strong>${update.paymentStatus.toUpperCase()}</strong>.<br>
+                     The payment was made by <strong>${update.buyerEmail}</strong>.`;
         icon = "💰";
 
+    } else if (queue === 'order_status_queue') {
+        if (!update.status) {
+            console.error("❌ Error: Missing order status.");
+            return;
+        }
+
+        emailSubject = `🛒 Order Update: #${update.orderId}`;
+        emailBody = `Your order status has been updated to: <strong>${update.status.toUpperCase()}</strong>.<br>
+                     The product has been paid for by <strong>${update.buyerEmail}</strong>.`;
+        icon = "🛒";
+
+    } else if (queue === 'delivery_status_queue') {
+        if (!update.status || !update.estimatedDelivery) {
+            console.error("❌ Error: Missing delivery status or estimated delivery date.");
+            return;
+        }
+
+        emailSubject = `🚚 Delivery Update: #${update.orderId}`;
+        emailBody = `Your order is now <strong>${update.status.toUpperCase()}</strong>. Expected delivery: <strong>${update.estimatedDelivery}</strong>.<br>
+                     The product has been paid for by <strong>${update.buyerEmail}</strong>.`;
+        icon = "🚚";
+
     } else {
-        console.error("Error: Unknown queue type.");
+        console.error("❌ Error: Unknown queue type.");
         return;
     }
 
@@ -111,18 +115,6 @@ const sendNotification = (update, queue) => {
                     ${update.totalPrice ? `<p style="margin: 5px 0;"><strong>💰 Total Price:</strong> $${update.totalPrice.toFixed(2)}</p>` : ''}
                     ${update.estimatedDelivery ? `<p style="margin: 5px 0;"><strong>⏳ Estimated Delivery:</strong> ${update.estimatedDelivery}</p>` : ''}
                 </div>
-
-                <h3 style="color: #2196F3; text-align: center;">🛒 Order Summary:</h3>
-                <ul style="list-style: none; padding: 0;">
-                    ${update.products && update.products.length > 0 ? update.products.map(product => `
-                        <li style="background: #f9f9f9; padding: 10px; margin-bottom: 8px; border-radius: 5px;">
-                            <p><strong>🏷️ Item:</strong> ${product.title}</p>
-                            <p><strong>🔢 Quantity:</strong> ${product.quantity}</p>
-                            <p><strong>💵 Price:</strong> $${product.price.toFixed(2)}</p>
-                            <p><strong>📦 Status:</strong> <span style="color: ${product.status.toUpperCase() === 'PENDING' ? '#FF9800' : '#4CAF50'};">${product.status.toUpperCase()}</span></p>
-                        </li>
-                    `).join('') : '<p>No products found in this order.</p>'}
-                </ul>
 
                 <p style="text-align: center; font-size: 16px; color: #555;">We appreciate your business and can't wait to serve you again! 🎈</p>
                 <hr style="border: none; height: 2px; background: #4CAF50; margin: 10px 0;">
